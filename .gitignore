@@ -44,3 +44,4 @@ wrangler.json
 .prettierrc
 db.sql
 test/
+webhook.txt
