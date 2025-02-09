@@ -6,7 +6,7 @@ export async function handleAddStreak(db, TELEGRAM_API_URL, chatId, goalName) {
 		return sendMessage(TELEGRAM_API_URL, chatId, 'Неправильний формат команди. Використовуйте /streak add <назва цілі>');
 	}
 
-  let streaks = await getUserStreaks(db, chatId);
+	let streaks = await getUserStreaks(db, chatId);
 
 	if (streaks[goalName]) {
 		return sendMessage(

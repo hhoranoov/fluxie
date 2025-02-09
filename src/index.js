@@ -1,4 +1,11 @@
-import { handleStreakCommand, handleIdCommand, handleStartCommand, handleStatusCommand, handleHelpCommand, handleSetDataCommand } from './handlers';
+import {
+	handleStreakCommand,
+	handleIdCommand,
+	handleStartCommand,
+	handleStatusCommand,
+	handleHelpCommand,
+	handleSetDataCommand,
+} from './handlers';
 import { handleDefaultText, handleImageCommand, handlePhotoCommand, handleClearCommand, saveUserData } from './assistant';
 import { sendMessage, saveMessage } from './utils';
 

@@ -1,6 +1,6 @@
-import { handleAddStreak, handleCheckStreaks, handleDeleteStreak } from "./streaks";
-import { saveUserData, getUserData, checkServicesAvailability } from "./assistant";
-import { sendMessage, saveMessage, deleteMessage } from "./utils";
+import { handleAddStreak, handleCheckStreaks, handleDeleteStreak } from './streaks';
+import { saveUserData, getUserData, checkServicesAvailability } from './assistant';
+import { sendMessage, saveMessage, deleteMessage } from './utils';
 
 // Функція старту
 export async function handleStartCommand(env, TELEGRAM_API_URL, message) {
