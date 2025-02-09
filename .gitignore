@@ -1,0 +1,46 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Cloudflare Workers
+workers-typescript/worker.ts
+
+# Директорії та файли, які не повинні бути в репозиторії
+/dist/
+/build/
+/out/
+
+# Лог файли
+*.log
+
+# Системи операцій
+.DS_Store
+Thumbs.db
+
+# Конфігураційні файли IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Бази даних та файли конфігурацій
+*.sqlite
+*.db
+.env
+.env.local
+.env.*.local
+
+# Інші файли середовища
+*.tgz
+*.tar.gz
+
+# Wrangler
+.wrangler/
+wrangler.json
+.editorconfig
+.prettierrc
+db.sql
+test/
