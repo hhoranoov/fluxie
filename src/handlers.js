@@ -20,8 +20,20 @@ export async function handleStartCommand(env, TELEGRAM_API_URL, message) {
 
 	const userData = (await getUserData(env.DB, message.from.id)) || {};
 	const userName = userData.first_name || 'користувач';
-	const reply = `Привіт, ${userName}!`;
-	const sentMessage = await sendMessage(TELEGRAM_API_URL, chatId, reply, {});
+	const reply = `Привіт, ${userName}! 👋\nЯ твій помічник. Вибери команду нижче:`;
+
+	const keyboard = {
+		inline_keyboard: [
+			[
+				{ text: '🇺🇦 На ЗСУ', url: 'https://savelife.in.ua/projects/status/active/' },
+				{ text: '❓ Допомога', callback_data: 'help' }
+			]
+		]
+	};
+
+	const sentMessage = await sendMessage(TELEGRAM_API_URL, chatId, reply, {
+		reply_markup: JSON.stringify(keyboard)
+	});
 
 	await env.DB.prepare('INSERT OR REPLACE INTO bot_messages (chat_id, command, message_id) VALUES (?, ?, ?)')
 		.bind(chatId, command, sentMessage.message_id)
@@ -42,42 +54,40 @@ export async function handleHelpCommand(env, TELEGRAM_API_URL, message) {
 		try {
 			await deleteMessage(TELEGRAM_API_URL, chatId, previousRecord.message_id);
 		} catch (error) {
-			console.error('Не вдалося видалити попереднє повідомлення help:', error);
+			console.error('Не вдалося видалити попереднє повідомлення /help:', error);
 		}
 	}
 
-	const reply = `✻ *Доступні команди*:
+	const keyboard = {
+		inline_keyboard: [
+			[
+				{ text: '🚀 Основні', callback_data: 'help_main' },
+				{ text: '💠 ШІ', callback_data: 'help_ai'}
+			],
+			[
+				{ text: '📝 Завдання', callback_data: 'help_tasks' },
+				{ text: '🎯 Цілі', callback_data: 'help_streaks' }
+			],
+			[
+				{ text: '📊 Статистика', callback_data: 'help_stats' },
+			]
+		]
+	};
 
-📝 *Завдання:*
-- /add <день> <час> <завдання> - додати нове завдання на вказаний день та час
-- /today - переглянути завдання на сьогодні
-- /tasks <день> - переглянути завдання на вказаний день
+	const reply = `✻ *Оберіть категорію команд:*`;
 
-🚀 *Основні команди:*
-- /start - почати роботу з ботом
-- /help - отримати допомогу
-- /getid - отримати ID користувача
-- /status - тест доступності ШІ сервісів
-- /setdata - додати важливі дані (ім'я, і.т.)
-- /clear - очистити історію 
-
-📊 *Статистика:*
-- /stats week - переглянути статистику за тиждень
-- /stats month - переглянути статистику за місяць
-
-🎯 *Цілі (Streaks):*
-- /streak add <назва цілі> - додати нову ціль
-- /streak check - перевірити поточні streaks
-- /streak delete <назва цілі> - видалити ціль
-`;
-
-	const sentMessage = await sendMessage(TELEGRAM_API_URL, chatId, reply, { parse_mode: 'Markdown' });
+	const sentMessage = await sendMessage(TELEGRAM_API_URL, chatId, reply, {
+		parse_mode: 'Markdown',
+		reply_markup: JSON.stringify(keyboard)
+	});
 
 	await env.DB.prepare('INSERT OR REPLACE INTO bot_messages (chat_id, command, message_id) VALUES (?, ?, ?)')
 		.bind(chatId, command, sentMessage.message_id)
 		.run();
 
-	await deleteMessage(TELEGRAM_API_URL, chatId, message.message_id);
+	if (message.message_id) {
+		await deleteMessage(TELEGRAM_API_URL, chatId, message.message_id);
+	}
 }
 
 // Функція створення цілі
