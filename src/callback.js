@@ -1,6 +1,5 @@
 import { sendMessage, editTelegramMessage } from './utils.js';
 import { handleHelpCommand } from './handlers.js';
-import { test } from 'vitest';
 
 export async function handleCallbackQuery(env, TELEGRAM_API_URL, callbackQuery) {
 	const chatId = callbackQuery.message.chat.id;
@@ -55,7 +54,7 @@ export async function handleCallbackQuery(env, TELEGRAM_API_URL, callbackQuery) 
 			reply_markup: JSON.stringify({ inline_keyboard: helpTexts[data].keyboard })
 		});
 	} else if (data === 'help') {
-		await handleHelpCommand(env, TELEGRAM_API_URL, callbackQuery.message);
+		await handleHelpCommand(env, TELEGRAM_API_URL, callbackQuery.message, false);
 	}
 
 	// Callback запит оброблено

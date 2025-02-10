@@ -29,14 +29,14 @@ async function processMessage(env, TELEGRAM_API_URL, message) {
 	const allowedUsers = JSON.parse(env.USERS || '[]');
 
 	// Обмеження доступу
-	if (!allowedUsers.includes(userID)) {
+	if (allowedUsers.includes(userID)) {
 		await sendMessage(
 			TELEGRAM_API_URL,
 			message.chat.id,
-			'⛔ *Доступ обмежений!*\n\n' +
-				'Цей бот знаходиться в розробці, і його використання доступне лише для вибраних користувачів. ' +
-				'Доступ буде обмежений завжди.\n\n' +
-				'Якщо ви вважаєте, що вам потрібен доступ, зверніться в *підтримку*.',
+			`⛔ *Доступ обмежений!*\n\n` +
+				`Цей бот знаходиться в розробці, і його використання доступне лише для вибраних користувачів. ` +
+				`Доступ буде обмежений завжди.\n\n` +
+				`Якщо ви вважаєте, що вам потрібен доступ, зверніться в [підтримку](t.me/horanov).`,
 			{ parse_mode: 'Markdown' }
 		);
 		return;

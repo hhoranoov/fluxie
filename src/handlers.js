@@ -20,7 +20,7 @@ export async function handleStartCommand(env, TELEGRAM_API_URL, message) {
 
 	const userData = (await getUserData(env.DB, message.from.id)) || {};
 	const userName = userData.first_name || 'користувач';
-	const reply = `Привіт, ${userName}! 👋\nЯ твій помічник. Вибери команду нижче:`;
+	const reply = `Привіт, ${userName}! 👋\n\nМене звати Флюксі. Обери команду нижче, або просто спілкуйся зі мною.`;
 
 	const keyboard = {
 		inline_keyboard: [
@@ -43,7 +43,7 @@ export async function handleStartCommand(env, TELEGRAM_API_URL, message) {
 }
 
 // Функція для допомоги
-export async function handleHelpCommand(env, TELEGRAM_API_URL, message) {
+export async function handleHelpCommand(env, TELEGRAM_API_URL, message, shouldDeleteOriginalMessage = true) {
 	const chatId = message.chat.id;
 	const command = 'help';
 	const previousRecord = await env.DB.prepare('SELECT message_id FROM bot_messages WHERE chat_id = ? AND command = ?')
@@ -62,7 +62,7 @@ export async function handleHelpCommand(env, TELEGRAM_API_URL, message) {
 		inline_keyboard: [
 			[
 				{ text: '🚀 Основні', callback_data: 'help_main' },
-				{ text: '💠 ШІ', callback_data: 'help_ai'}
+				{ text: '💠 ШІ', callback_data: 'help_ai' }
 			],
 			[
 				{ text: '📝 Завдання', callback_data: 'help_tasks' },
@@ -74,8 +74,10 @@ export async function handleHelpCommand(env, TELEGRAM_API_URL, message) {
 		]
 	};
 
-	const reply = `✻ *Оберіть категорію команд:*`;
+	const reply = `✻ *Вітаю!* Я Флюксі, і вмію багато чого.
 
+	📲 _Виберіть категорію, щоб отримати допомогу по команді._`;
+	
 	const sentMessage = await sendMessage(TELEGRAM_API_URL, chatId, reply, {
 		parse_mode: 'Markdown',
 		reply_markup: JSON.stringify(keyboard)
@@ -85,7 +87,7 @@ export async function handleHelpCommand(env, TELEGRAM_API_URL, message) {
 		.bind(chatId, command, sentMessage.message_id)
 		.run();
 
-	if (message.message_id) {
+	if (shouldDeleteOriginalMessage && message.message_id) {
 		await deleteMessage(TELEGRAM_API_URL, chatId, message.message_id);
 	}
 }
@@ -108,8 +110,8 @@ export async function handleStreakCommand(db, TELEGRAM_API_URL, message) {
 		const goalName = args.slice(1).join(' ');
 		await handleDeleteStreak(db, TELEGRAM_API_URL, message.chat.id, goalName);
 	} else {
-		const reply = 'Невідома команда streak. Використовуйте /streak add <назва цілі>, /streak check або /streak delete <назва цілі>.';
-		await sendMessage(TELEGRAM_API_URL, message.chat.id, reply);
+		const reply = '⚠️ *Невідома команда streak.*\n\nВикористовуйте `/streak add <назва цілі>`, `/streak check` або `/streak delete <назва цілі>`.';
+		await sendMessage(TELEGRAM_API_URL, message.chat.id, reply, { parse_mode: 'Markdown' });
 	}
 }
 
@@ -130,19 +132,19 @@ export async function handleStatusCommand(env, TELEGRAM_API_URL, message) {
 export async function handleSetDataCommand(db, TELEGRAM_API_URL, message) {
 	const data = message.text.substring(8).trim();
 	if (!data) {
-		const reply = 'Будь ласка, надайте дані для запису.';
+		const reply = '📃 Будь ласка, надайте дані для запису.';
 		await sendMessage(TELEGRAM_API_URL, message.chat.id, reply);
 		return;
 	}
 	await saveUserData(db, message.from.id, data);
-	const reply = `Дані успішно записані: ${data}`;
-	await sendMessage(TELEGRAM_API_URL, message.chat.id, reply);
+	const reply = `🎉 Дані успішно записані: \`${data}\``;
+	await sendMessage(TELEGRAM_API_URL, message.chat.id, reply, { parse_mode: 'Markdown' });
 	await saveMessage(db, message.from.id, message.chat.id, 'bot', reply);
 }
 
 // Функція для отримання ID
 export async function handleIdCommand(env, TELEGRAM_API_URL, message) {
-	const reply = `Ваш Telegram ID: \`${message.from.id}\``;
+	const reply = `🪪 Ваш Telegram ID: \`${message.from.id}\``;
 	await sendMessage(TELEGRAM_API_URL, message.chat.id, reply, { parse_mode: 'Markdown' });
 	await saveMessage(env.DB, message.from.id, message.chat.id, 'bot', reply);
 }
