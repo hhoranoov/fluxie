@@ -29,7 +29,7 @@ async function processMessage(env, TELEGRAM_API_URL, message) {
 	const allowedUsers = JSON.parse(env.USERS || '[]');
 
 	// Обмеження доступу
-	if (allowedUsers.includes(userID)) {
+	if (!allowedUsers.includes(userID)) {
 		await sendMessage(
 			TELEGRAM_API_URL,
 			message.chat.id,
