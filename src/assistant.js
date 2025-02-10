@@ -101,7 +101,7 @@ export async function handleImageCommand(env, TELEGRAM_API_URL, message) {
 
 		const sendPhotoResponse = await fetch(`${TELEGRAM_API_URL}/sendPhoto`, {
 			method: 'POST',
-			body: formData
+			body: formData,
 		});
 
 		if (!sendPhotoResponse.ok) {

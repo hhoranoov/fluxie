@@ -8,7 +8,7 @@ import {
 	handleAddCommand,
 	handleTodayCommand,
 	handleTasksCommand,
-	handleStatsCommand
+	handleStatsCommand,
 } from './handlers';
 import { handleDefaultText, handleImageCommand, handlePhotoCommand, handleClearCommand, saveUserData } from './assistant';
 import { sendMessage, saveMessage } from './utils';
@@ -72,14 +72,14 @@ async function processMessage(env, TELEGRAM_API_URL, message) {
 		} else if (message.text.startsWith('/streak ')) {
 			await handleStreakCommand(env.DB, TELEGRAM_API_URL, message);
 		} else if (message.text.startsWith('/add ')) {
-      await handleAddCommand(env.DB, TELEGRAM_API_URL, message);
-    } else if (message.text.startsWith('/today')) {
-      await handleTodayCommand(env.DB, TELEGRAM_API_URL, message);
-    } else if (message.text.startsWith('/tasks ')) {
-      await handleTasksCommand(env.DB, TELEGRAM_API_URL, message);
-    } else if (message.text.startsWith('/stats ')) {
-      await handleStatsCommand(env.DB, TELEGRAM_API_URL, message);
-    } else {
+			await handleAddCommand(env.DB, TELEGRAM_API_URL, message);
+		} else if (message.text.startsWith('/today')) {
+			await handleTodayCommand(env.DB, TELEGRAM_API_URL, message);
+		} else if (message.text.startsWith('/tasks ')) {
+			await handleTasksCommand(env.DB, TELEGRAM_API_URL, message);
+		} else if (message.text.startsWith('/stats ')) {
+			await handleStatsCommand(env.DB, TELEGRAM_API_URL, message);
+		} else {
 			await handleDefaultText(env.DB, TELEGRAM_API_URL, message);
 		}
 	} else if (message?.photo) {

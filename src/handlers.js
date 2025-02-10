@@ -27,13 +27,13 @@ export async function handleStartCommand(env, TELEGRAM_API_URL, message) {
 		inline_keyboard: [
 			[
 				{ text: '🇺🇦 На ЗСУ', url: 'https://savelife.in.ua/projects/status/active/' },
-				{ text: '❓ Допомога', callback_data: 'help' }
-			]
-		]
+				{ text: '❓ Допомога', callback_data: 'help' },
+			],
+		],
 	};
 
 	const sentMessage = await sendMessage(TELEGRAM_API_URL, chatId, reply, {
-		reply_markup: JSON.stringify(keyboard)
+		reply_markup: JSON.stringify(keyboard),
 	});
 
 	await env.DB.prepare('INSERT OR REPLACE INTO bot_messages (chat_id, command, message_id) VALUES (?, ?, ?)')
@@ -63,25 +63,23 @@ export async function handleHelpCommand(env, TELEGRAM_API_URL, message, shouldDe
 		inline_keyboard: [
 			[
 				{ text: '🚀 Основні', callback_data: 'help_main' },
-				{ text: '💠 ШІ', callback_data: 'help_ai' }
+				{ text: '💠 ШІ', callback_data: 'help_ai' },
 			],
 			[
 				{ text: '📝 Завдання', callback_data: 'help_tasks' },
-				{ text: '🎯 Цілі', callback_data: 'help_streaks' }
+				{ text: '🎯 Цілі', callback_data: 'help_streaks' },
 			],
-			[
-				{ text: '📊 Статистика', callback_data: 'help_stats' },
-			]
-		]
+			[{ text: '📊 Статистика', callback_data: 'help_stats' }],
+		],
 	};
 
 	const reply = `✻ *Вітаю!* Я Флюксі, і вмію багато чого.
 
 	📲 _Виберіть категорію, щоб отримати допомогу по команді._`;
-	
+
 	const sentMessage = await sendMessage(TELEGRAM_API_URL, chatId, reply, {
 		parse_mode: 'Markdown',
-		reply_markup: JSON.stringify(keyboard)
+		reply_markup: JSON.stringify(keyboard),
 	});
 
 	await env.DB.prepare('INSERT OR REPLACE INTO bot_messages (chat_id, command, message_id) VALUES (?, ?, ?)')
@@ -111,7 +109,8 @@ export async function handleStreakCommand(db, TELEGRAM_API_URL, message) {
 		const goalName = args.slice(1).join(' ');
 		await handleDeleteStreak(db, TELEGRAM_API_URL, message.chat.id, goalName);
 	} else {
-		const reply = '⚠️ *Невідома команда streak.*\n\nВикористовуйте `/streak add <назва цілі>`, `/streak check` або `/streak delete <назва цілі>`.';
+		const reply =
+			'⚠️ *Невідома команда streak.*\n\nВикористовуйте `/streak add <назва цілі>`, `/streak check` або `/streak delete <назва цілі>`.';
 		await sendMessage(TELEGRAM_API_URL, message.chat.id, reply, { parse_mode: 'Markdown' });
 	}
 }
@@ -150,33 +149,37 @@ export async function handleIdCommand(env, TELEGRAM_API_URL, message) {
 	await saveMessage(env.DB, message.from.id, message.chat.id, 'bot', reply);
 }
 
+// Функція додавання завданння
 export async function handleAddCommand(db, TELEGRAM_API_URL, message) {
-  const args = message.text.substring(5).trim().split(' ');
-  if (args.length < 3) {
-    const reply = 'Неправильний формат команди. Використовуйте /add <день> <час> <завдання>';
-    await sendMessage(TELEGRAM_API_URL, message.chat.id, reply);
-    return;
-  }
-  const [dayArg, timeArg, ...taskParts] = args;
-  const task = taskParts.join(' ');
-  await handleAddTask(db, TELEGRAM_API_URL, message.chat.id, dayArg, timeArg, task);
+	const args = message.text.substring(5).trim().split(' ');
+	if (args.length < 3) {
+		const reply = 'Неправильний формат команди. Використовуйте /add <день> <час> <завдання>';
+		await sendMessage(TELEGRAM_API_URL, message.chat.id, reply);
+		return;
+	}
+	const [dayArg, timeArg, ...taskParts] = args;
+	const task = taskParts.join(' ');
+	await handleAddTask(db, TELEGRAM_API_URL, message.chat.id, dayArg, timeArg, task);
 }
 
+// Функція перегляду сьогодні
 export async function handleTodayCommand(db, TELEGRAM_API_URL, message) {
-  await handleViewTasks(db, TELEGRAM_API_URL, message.chat.id, 'today');
+	await handleViewTasks(db, TELEGRAM_API_URL, message.chat.id, 'today');
 }
 
+// Функція перегляду певного дня
 export async function handleTasksCommand(db, TELEGRAM_API_URL, message) {
-  const dayArg = message.text.substring(7).trim();
-  await handleViewTasks(db, TELEGRAM_API_URL, message.chat.id, dayArg);
+	const dayArg = message.text.substring(7).trim();
+	await handleViewTasks(db, TELEGRAM_API_URL, message.chat.id, dayArg);
 }
 
+// Функція статистики
 export async function handleStatsCommand(db, TELEGRAM_API_URL, message) {
-  const period = message.text.substring(7).trim().toLowerCase();
-  if (period === 'week' || period === 'month') {
-    await handleStats(db, TELEGRAM_API_URL, message.chat.id, period);
-  } else {
-    const reply = 'Невідомий період. Використовуйте /stats week або /stats month.';
-    await sendMessage(TELEGRAM_API_URL, message.chat.id, reply);
-  }
+	const period = message.text.substring(7).trim().toLowerCase();
+	if (period === 'week' || period === 'month') {
+		await handleStats(db, TELEGRAM_API_URL, message.chat.id, period);
+	} else {
+		const reply = 'Невідомий період. Використовуйте /stats week або /stats month.';
+		await sendMessage(TELEGRAM_API_URL, message.chat.id, reply);
+	}
 }
