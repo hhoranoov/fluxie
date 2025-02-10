@@ -15,12 +15,12 @@ import { sendMessage, saveMessage } from './utils';
 import { handleCallbackQuery } from './callback';
 
 export default {
-	async fetch(request, env, db) {
+	async fetch(request, env) {
 		const TELEGRAM_API_URL = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}`;
 		const update = await request.json();
 
 		if (update.callback_query) {
-			await handleCallbackQuery(env, db, TELEGRAM_API_URL, update.callback_query);
+			await handleCallbackQuery(env, TELEGRAM_API_URL, update.callback_query);
 		} else if (update.message) {
 			await processMessage(env, TELEGRAM_API_URL, update.message);
 		}
