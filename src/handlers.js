@@ -1,5 +1,6 @@
 import { handleAddStreak, handleCheckStreaks, handleDeleteStreak } from './streaks';
 import { saveUserData, getUserData, checkServicesAvailability } from './assistant';
+import { handleAddTask, handleViewTasks, handleStats } from './tasks.js';
 import { sendMessage, saveMessage, deleteMessage } from './utils';
 
 // Функція старту
@@ -147,4 +148,35 @@ export async function handleIdCommand(env, TELEGRAM_API_URL, message) {
 	const reply = `🪪 Ваш Telegram ID: \`${message.from.id}\``;
 	await sendMessage(TELEGRAM_API_URL, message.chat.id, reply, { parse_mode: 'Markdown' });
 	await saveMessage(env.DB, message.from.id, message.chat.id, 'bot', reply);
+}
+
+export async function handleAddCommand(db, TELEGRAM_API_URL, message) {
+  const args = message.text.substring(5).trim().split(' ');
+  if (args.length < 3) {
+    const reply = 'Неправильний формат команди. Використовуйте /add <день> <час> <завдання>';
+    await sendMessage(TELEGRAM_API_URL, message.chat.id, reply);
+    return;
+  }
+  const [dayArg, timeArg, ...taskParts] = args;
+  const task = taskParts.join(' ');
+  await handleAddTask(db, TELEGRAM_API_URL, message.chat.id, dayArg, timeArg, task);
+}
+
+export async function handleTodayCommand(db, TELEGRAM_API_URL, message) {
+  await handleViewTasks(db, TELEGRAM_API_URL, message.chat.id, 'today');
+}
+
+export async function handleTasksCommand(db, TELEGRAM_API_URL, message) {
+  const dayArg = message.text.substring(7).trim();
+  await handleViewTasks(db, TELEGRAM_API_URL, message.chat.id, dayArg);
+}
+
+export async function handleStatsCommand(db, TELEGRAM_API_URL, message) {
+  const period = message.text.substring(7).trim().toLowerCase();
+  if (period === 'week' || period === 'month') {
+    await handleStats(db, TELEGRAM_API_URL, message.chat.id, period);
+  } else {
+    const reply = 'Невідомий період. Використовуйте /stats week або /stats month.';
+    await sendMessage(TELEGRAM_API_URL, message.chat.id, reply);
+  }
 }

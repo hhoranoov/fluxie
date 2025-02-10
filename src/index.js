@@ -5,18 +5,22 @@ import {
 	handleStatusCommand,
 	handleHelpCommand,
 	handleSetDataCommand,
+	handleAddCommand,
+	handleTodayCommand,
+	handleTasksCommand,
+	handleStatsCommand
 } from './handlers';
 import { handleDefaultText, handleImageCommand, handlePhotoCommand, handleClearCommand, saveUserData } from './assistant';
 import { sendMessage, saveMessage } from './utils';
 import { handleCallbackQuery } from './callback';
 
 export default {
-	async fetch(request, env) {
+	async fetch(request, env, db) {
 		const TELEGRAM_API_URL = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}`;
 		const update = await request.json();
 
 		if (update.callback_query) {
-			await handleCallbackQuery(env, TELEGRAM_API_URL, update.callback_query);
+			await handleCallbackQuery(env, db, TELEGRAM_API_URL, update.callback_query);
 		} else if (update.message) {
 			await processMessage(env, TELEGRAM_API_URL, update.message);
 		}
@@ -67,7 +71,15 @@ async function processMessage(env, TELEGRAM_API_URL, message) {
 			await handleClearCommand(env.DB, TELEGRAM_API_URL, message);
 		} else if (message.text.startsWith('/streak ')) {
 			await handleStreakCommand(env.DB, TELEGRAM_API_URL, message);
-		} else {
+		} else if (message.text.startsWith('/add ')) {
+      await handleAddCommand(env.DB, TELEGRAM_API_URL, message);
+    } else if (message.text.startsWith('/today')) {
+      await handleTodayCommand(env.DB, TELEGRAM_API_URL, message);
+    } else if (message.text.startsWith('/tasks ')) {
+      await handleTasksCommand(env.DB, TELEGRAM_API_URL, message);
+    } else if (message.text.startsWith('/stats ')) {
+      await handleStatsCommand(env.DB, TELEGRAM_API_URL, message);
+    } else {
 			await handleDefaultText(env.DB, TELEGRAM_API_URL, message);
 		}
 	} else if (message?.photo) {
