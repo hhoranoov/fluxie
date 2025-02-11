@@ -9,6 +9,7 @@ import {
 	handleTodayCommand,
 	handleTasksCommand,
 	handleStatsCommand,
+	handleBroadcastCommand
 } from './handlers';
 import { handleDefaultText, handleImageCommand, handlePhotoCommand, handleClearCommand, saveUserData } from './assistant';
 import { sendMessage, saveMessage } from './utils';
@@ -31,6 +32,7 @@ export default {
 async function processMessage(env, TELEGRAM_API_URL, message) {
 	const userID = message?.from?.id;
 	const allowedUsers = JSON.parse(env.USERS || '[]');
+	const admins = Array.isArray(env.ADMIN) ? env.ADMIN : JSON.parse(env.ADMIN || '[]');
 
 	// Обмеження доступу
 	if (!allowedUsers.includes(userID)) {
@@ -79,6 +81,8 @@ async function processMessage(env, TELEGRAM_API_URL, message) {
 			await handleTasksCommand(env.DB, TELEGRAM_API_URL, message);
 		} else if (message.text.startsWith('/stats ')) {
 			await handleStatsCommand(env.DB, TELEGRAM_API_URL, message);
+		} else if (message.text.startsWith('/broadcast ')) {
+			await handleBroadcastCommand(env, TELEGRAM_API_URL, message, admins);
 		} else {
 			await handleDefaultText(env.DB, TELEGRAM_API_URL, message);
 		}

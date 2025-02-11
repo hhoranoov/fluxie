@@ -183,3 +183,30 @@ export async function handleStatsCommand(db, TELEGRAM_API_URL, message) {
 		await sendMessage(TELEGRAM_API_URL, message.chat.id, reply);
 	}
 }
+
+// Функція для розсилки
+export async function handleBroadcastCommand(env, TELEGRAM_API_URL, message, admins) {
+	const senderID = message.from.id;
+	if (!admins.includes(senderID)) {
+		await sendMessage(
+			TELEGRAM_API_URL,
+			message.chat.id,
+			'❌ У вас немає прав для розсилки повідомлень.'
+		);
+		return;
+	}
+
+	const args = message.text.split(' ');
+	if (args.length < 3) {
+		await sendMessage(TELEGRAM_API_URL, message.chat.id, '⚠ Формат: /broadcast <user_id> <message>');
+		return;
+	}
+
+	const userID = args[1];
+	const text = args.slice(2).join(' ');
+
+	await sendMessage(TELEGRAM_API_URL, userID, `📢 *Оголошення від адміністрації:*
+
+${text}`, { parse_mode: 'Markdown' });
+	await sendMessage(TELEGRAM_API_URL, message.chat.id, '✅ Повідомлення надіслано користувачу.');
+}
