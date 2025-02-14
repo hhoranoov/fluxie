@@ -9,7 +9,7 @@ import {
 	handleTodayCommand,
 	handleTasksCommand,
 	handleStatsCommand,
-	handleBroadcastCommand
+	handleBroadcastCommand,
 } from './handlers';
 import { handleDefaultText, handleImageCommand, handlePhotoCommand, handleClearCommand, saveUserData } from './assistant';
 import { sendMessage, saveMessage } from './utils';
@@ -31,21 +31,36 @@ export default {
 
 async function processMessage(env, TELEGRAM_API_URL, message) {
 	const userID = message?.from?.id;
+	const chatID = message.chat.id;
 	const allowedUsers = JSON.parse(env.USERS || '[]');
 	const admins = Array.isArray(env.ADMIN) ? env.ADMIN : JSON.parse(env.ADMIN || '[]');
 
-	// Обмеження доступу
-	if (!allowedUsers.includes(userID)) {
+	if (chatID > 0 && !allowedUsers.includes(userID)) {
 		await sendMessage(
 			TELEGRAM_API_URL,
-			message.chat.id,
+			chatID,
 			`⛔ *Доступ обмежений!*\n\n` +
 				`Цей бот знаходиться в розробці, і його використання доступне лише для вибраних користувачів. ` +
 				`Доступ буде обмежений завжди.\n\n` +
 				`Якщо ви вважаєте, що вам потрібен доступ, зверніться в [підтримку](t.me/horanov).`,
-			{ parse_mode: 'Markdown' }
+			{
+				parse_mode: 'Markdown',
+			}
 		);
 		return;
+	}
+
+	if (chatID < 0) {
+		const isGroupAllowed = await checkGroupAdmins(TELEGRAM_API_URL, chatID, allowedUsers);
+		if (!isGroupAllowed) {
+			await sendMessage(
+				TELEGRAM_API_URL,
+				chatID,
+				`⛔ *Доступ обмежений!*\n\nУ цій групі немає адміністратора зі списку дозволених користувачів.`,
+				{ parse_mode: 'Markdown' }
+			);
+			return;
+		}
 	}
 
 	// Збереження даних
@@ -84,12 +99,27 @@ async function processMessage(env, TELEGRAM_API_URL, message) {
 		} else if (message.text.startsWith('/broadcast ')) {
 			await handleBroadcastCommand(env, TELEGRAM_API_URL, message, admins);
 		} else if (message.text.startsWith('/settings')) {
-			const reply = "В розробці!"
-			await sendMessage(TELEGRAM_API_URL, message.chat.id, reply)
+			const reply = 'В розробці!';
+			await sendMessage(TELEGRAM_API_URL, message.chat.id, reply);
 		} else {
 			await handleDefaultText(env.DB, TELEGRAM_API_URL, message);
 		}
 	} else if (message?.photo) {
 		await handlePhotoCommand(env, TELEGRAM_API_URL, message);
+	}
+}
+
+async function checkGroupAdmins(TELEGRAM_API_URL, chatID, allowedUsers) {
+	try {
+		const response = await fetch(`${TELEGRAM_API_URL}/getChatAdministrators?chat_id=${chatID}`);
+		const data = await response.json();
+
+		if (!data.ok) return false;
+
+		const admins = data.result.map((admin) => admin.user.id);
+		return allowedUsers.some((userID) => admins.includes(userID));
+	} catch (error) {
+		console.error('Помилка перевірки адмінів:', error);
+		return false;
 	}
 }
