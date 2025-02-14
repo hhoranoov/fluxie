@@ -157,8 +157,9 @@ export async function handleStats(db, TELEGRAM_API_URL, chatId, period) {
 		endDate = new Date(startDate);
 		endDate.setDate(startDate.getDate() + 6);
 	} else if (period === 'month') {
-		startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-		endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+		const test = `😔 Вибачте за незручності.\n🔺Сервіс тимчасово недоступний.`;
+		await sendMessage(TELEGRAM_API_URL, chatId, test);
+		return;
 	}
 	let completedTasks = 0;
 	let totalTasks = 0;
