@@ -80,10 +80,10 @@ export async function handleViewTasks(db, TELEGRAM_API_URL, chatId, viewDay = 't
 		}
 		return;
 	}
-	const tasksList = sortedTasks.map((task) => `${task.status === 'Виконано' ? '✅' : '❌'} ${task.time} - ${task.task}`).join('\n');
+	const tasksList = sortedTasks.map((task) => `${task.status === 'Виконано' ? '✅' : '🔺'} \`${task.time}\` - ${task.task}`).join('\n');
 	const messageText = `Завдання на *${capitalize(viewDay)}* (${formattedDate}):\n${tasksList}`;
 	const inlineKeyboard = {
-		inline_keyboard: [[{ text: 'Оновити', callback_data: `refresh_${viewDay}` }]],
+		inline_keyboard: [[{ text: '🔄 Оновити', callback_data: `refresh_${viewDay}` }]],
 	};
 	if (messageId) {
 		await editTelegramMessage(TELEGRAM_API_URL, chatId, messageId, messageText, { reply_markup: inlineKeyboard, parse_mode: 'Markdown' });
