@@ -195,25 +195,42 @@ export async function handleStatsCommand(db, TELEGRAM_API_URL, message) {
 export async function handleBroadcastCommand(env, TELEGRAM_API_URL, message, admins) {
 	const senderID = message.from.id;
 	if (!admins.includes(senderID)) {
-		await sendMessage(
-			TELEGRAM_API_URL,
-			message.chat.id,
-			'❌ У вас немає прав для розсилки повідомлень.'
-		);
+		await sendMessage(TELEGRAM_API_URL, message.chat.id, '❌ У вас немає прав для розсилки повідомлень.');
 		return;
 	}
 
 	const args = message.text.split(' ');
-	if (args.length < 3) {
-		await sendMessage(TELEGRAM_API_URL, message.chat.id, '⚠ Формат: /broadcast <user_id> <message>');
+	if (args.length < 2) {
+		await sendMessage(TELEGRAM_API_URL, message.chat.id, '⚠ Формат: /broadcast <user_id або "all"> <message>');
 		return;
 	}
 
-	const userID = args[1];
+	const target = args[1];
 	const text = args.slice(2).join(' ');
 
-	await sendMessage(TELEGRAM_API_URL, userID, `📢 *Оголошення від адміністрації:*
+	if (!text) {
+		await sendMessage(TELEGRAM_API_URL, message.chat.id, '⚠ Будь ласка, введіть текст повідомлення.');
+		return;
+	}
 
-${text}`, { parse_mode: 'Markdown' });
-	await sendMessage(TELEGRAM_API_URL, message.chat.id, '✅ Повідомлення надіслано користувачу.');
+	if (target.toLowerCase() === 'all') {
+		const { results } = await env.DB.prepare(`SELECT user_id FROM user_data`).all();
+
+		if (results.length === 0) {
+			await sendMessage(TELEGRAM_API_URL, message.chat.id, '⚠ У базі немає користувачів для розсилки.');
+			return;
+		}
+
+		for (const user of results) {
+			await sendMessage(TELEGRAM_API_URL, user.user_id, `📢 *Оголошення від адміністрації:*\n\n${text}`, { parse_mode: 'Markdown' });
+			await new Promise((resolve) => setTimeout(resolve, 500));
+		}
+
+		await sendMessage(TELEGRAM_API_URL, message.chat.id, `✅ Повідомлення надіслано *${results.length}* користувачам.`, {
+			parse_mode: 'Markdown',
+		});
+	} else {
+		await sendMessage(TELEGRAM_API_URL, target, `📢 *Оголошення від адміністрації:*\n\n${text}`, { parse_mode: 'Markdown' });
+		await sendMessage(TELEGRAM_API_URL, message.chat.id, '✅ Повідомлення надіслано користувачу.');
+	}
 }
