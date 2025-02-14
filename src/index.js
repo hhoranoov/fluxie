@@ -83,6 +83,9 @@ async function processMessage(env, TELEGRAM_API_URL, message) {
 			await handleStatsCommand(env.DB, TELEGRAM_API_URL, message);
 		} else if (message.text.startsWith('/broadcast ')) {
 			await handleBroadcastCommand(env, TELEGRAM_API_URL, message, admins);
+		} else if (message.text.startsWith('/settings')) {
+			const reply = "В розробці!"
+			await sendMessage(TELEGRAM_API_URL, message.chat.id, reply)
 		} else {
 			await handleDefaultText(env.DB, TELEGRAM_API_URL, message);
 		}

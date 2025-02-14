@@ -144,7 +144,14 @@ export async function handleSetDataCommand(db, TELEGRAM_API_URL, message) {
 
 // Функція для отримання ID
 export async function handleIdCommand(env, TELEGRAM_API_URL, message) {
-	const reply = `🪪 Ваш Telegram ID: \`${message.from.id}\``;
+	let reply;
+
+	if (message.reply_to_message && message.reply_to_message.sticker) {
+		reply = `🖼 ID стікера: \`${message.reply_to_message.sticker.file_id}\``;
+	} else {
+		reply = `🪪 Ваш Telegram ID: \`${message.from.id}\``;
+	}
+
 	await sendMessage(TELEGRAM_API_URL, message.chat.id, reply, { parse_mode: 'Markdown' });
 	await saveMessage(env.DB, message.from.id, message.chat.id, 'bot', reply);
 }
