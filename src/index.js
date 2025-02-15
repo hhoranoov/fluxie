@@ -12,7 +12,7 @@ import {
 	handleBroadcastCommand,
 } from './handlers';
 import { handleDefaultText, handleImageCommand, handlePhotoCommand, handleClearCommand, saveUserData } from './assistant';
-import { sendMessage, saveMessage } from './utils';
+import { sendMessage, saveMessage, checkGroupAdmins } from './utils';
 import { handleCallbackQuery } from './callback';
 
 export default {
@@ -106,20 +106,5 @@ async function processMessage(env, TELEGRAM_API_URL, message) {
 		}
 	} else if (message?.photo) {
 		await handlePhotoCommand(env, TELEGRAM_API_URL, message);
-	}
-}
-
-async function checkGroupAdmins(TELEGRAM_API_URL, chatID, allowedUsers) {
-	try {
-		const response = await fetch(`${TELEGRAM_API_URL}/getChatAdministrators?chat_id=${chatID}`);
-		const data = await response.json();
-
-		if (!data.ok) return false;
-
-		const admins = data.result.map((admin) => admin.user.id);
-		return allowedUsers.some((userID) => admins.includes(userID));
-	} catch (error) {
-		console.error('Помилка перевірки адмінів:', error);
-		return false;
 	}
 }

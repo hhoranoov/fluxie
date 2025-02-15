@@ -74,6 +74,22 @@ export async function deleteMessage(TELEGRAM_API_URL, chatId, messageId) {
 	}
 }
 
+// Функція перевірки адмінів
+export async function checkGroupAdmins(TELEGRAM_API_URL, chatID, allowedUsers) {
+	try {
+		const response = await fetch(`${TELEGRAM_API_URL}/getChatAdministrators?chat_id=${chatID}`);
+		const data = await response.json();
+
+		if (!data.ok) return false;
+
+		const admins = data.result.map((admin) => admin.user.id);
+		return allowedUsers.some((userID) => admins.includes(userID));
+	} catch (error) {
+		console.error('Помилка перевірки адмінів:', error);
+		return false;
+	}
+}
+
 // Функція збереження повідомлення
 export async function saveMessage(db, userId, chatId, sender, text, mediaUrl = null) {
 	if (mediaUrl) {
