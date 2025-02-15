@@ -34,15 +34,16 @@ async function processMessage(env, TELEGRAM_API_URL, message) {
 	const chatID = message.chat.id;
 	const allowedUsers = JSON.parse(env.USERS || '[]');
 	const admins = Array.isArray(env.ADMIN) ? env.ADMIN : JSON.parse(env.ADMIN || '[]');
+	const triggerWords = ['флюксі', 'fluxie', 'флюкс', 'флю', 'ксі'];
 
 	if (chatID > 0 && !allowedUsers.includes(userID)) {
 		await sendMessage(
 			TELEGRAM_API_URL,
 			chatID,
-			`⛔ *Доступ обмежений!*\n\n` +
-				`Цей бот знаходиться в розробці, і його використання доступне лише для вибраних користувачів. ` +
-				`Доступ буде обмежений завжди.\n\n` +
-				`Якщо ви вважаєте, що вам потрібен доступ, зверніться в [підтримку](t.me/horanov).`,
+			'⛔ *Доступ обмежений!*\n\n' +
+				'Цей бот знаходиться в розробці, і його використання доступне лише для вибраних користувачів.' +
+				'Доступ буде обмежений завжди.\n\n' +
+				'Якщо ви вважаєте, що вам потрібен доступ, зверніться в [підтримку](t.me/horanov).',
 			{
 				parse_mode: 'Markdown',
 			}
@@ -56,9 +57,20 @@ async function processMessage(env, TELEGRAM_API_URL, message) {
 			await sendMessage(
 				TELEGRAM_API_URL,
 				chatID,
-				`⛔ *Доступ обмежений!*\n\nУ цій групі немає адміністратора зі списку дозволених користувачів.`,
+				'⛔ *Доступ обмежений!*\n\nУ цій групі немає адміністратора зі списку дозволених користувачів.',
 				{ parse_mode: 'Markdown' }
 			);
+			return;
+		}
+
+		if (message?.text) {
+			const textLower = message.text.toLowerCase();
+			const containsTrigger = triggerWords.some((word) => textLower.includes(word));
+
+			if (!containsTrigger) {
+				return;
+			}
+		} else {
 			return;
 		}
 	}
