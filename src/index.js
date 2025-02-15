@@ -31,6 +31,7 @@ export default {
 
 async function processMessage(env, TELEGRAM_API_URL, message) {
 	const userID = message?.from?.id;
+	const userName = message?.from?.first_name || message?.from?.username || 'Не визначено';
 	const chatID = message.chat.id;
 	const allowedUsers = JSON.parse(env.USERS || '[]');
 	const admins = Array.isArray(env.ADMIN) ? env.ADMIN : JSON.parse(env.ADMIN || '[]');
@@ -75,14 +76,14 @@ async function processMessage(env, TELEGRAM_API_URL, message) {
 		}
 	}
 
-	// Збереження даних
+	// Збереження даних користувача
 	if (message?.from?.first_name) {
 		await saveUserData(env.DB, message.from.id, { first_name: message.from.first_name });
 	}
 
 	// Збереження повідомлень
 	if (message?.text) {
-		await saveMessage(env.DB, message.from.id, message.chat.id, 'user', message.text);
+		await saveMessage(env.DB, message.from.id, userName, message.chat.id, 'user', message.text);
 		// Обробка команд
 		if (message.text.startsWith('/start')) {
 			await handleStartCommand(env, TELEGRAM_API_URL, message);

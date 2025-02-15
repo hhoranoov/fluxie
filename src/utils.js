@@ -1,16 +1,15 @@
 // Функція надсилання повідомлень
 export async function sendMessage(TELEGRAM_API_URL, chatId, text, options = {}) {
-	const response = await fetch(`${TELEGRAM_API_URL}/sendMessage`, {
+	const params = {
+		chat_id: chatId,
+		text,
+		...options,
+	};
+	await fetch(`${TELEGRAM_API_URL}/sendMessage`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			chat_id: chatId,
-			text,
-			...options,
-		}),
+		body: JSON.stringify(params),
 	});
-	const data = await response.json();
-	return data.result;
 }
 
 // Функція для редагування повідомлень
@@ -45,16 +44,10 @@ export async function getFile(TELEGRAM_API_URL, fileId) {
 
 // Функція для відправлення chatAction
 export async function sendChatAction(TELEGRAM_API_URL, chatId, action) {
-	const url = `${TELEGRAM_API_URL}/sendChatAction`;
-	const body = {
-		chat_id: chatId,
-		action: action,
-	};
-
-	await fetch(url, {
+	await fetch(`${TELEGRAM_API_URL}/sendChatAction`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(body),
+		body: JSON.stringify({ chat_id: chatId, action }),
 	});
 }
 
@@ -75,29 +68,19 @@ export async function deleteMessage(TELEGRAM_API_URL, chatId, messageId) {
 }
 
 // Функція перевірки адмінів
-export async function checkGroupAdmins(TELEGRAM_API_URL, chatID, allowedUsers) {
-	try {
-		const response = await fetch(`${TELEGRAM_API_URL}/getChatAdministrators?chat_id=${chatID}`);
-		const data = await response.json();
-
-		if (!data.ok) return false;
-
-		const admins = data.result.map((admin) => admin.user.id);
-		return allowedUsers.some((userID) => admins.includes(userID));
-	} catch (error) {
-		console.error('Помилка перевірки адмінів:', error);
-		return false;
-	}
+export async function checkGroupAdmins(TELEGRAM_API_URL, chatId, allowedUsers) {
+  const response = await fetch(`${TELEGRAM_API_URL}/getChatAdministrators?chat_id=${chatId}`);
+  const data = await response.json();
+  if (!data.ok) return false;
+  const admins = data.result.map((admin) => admin.user.id);
+  return admins.some((id) => allowedUsers.includes(id));
 }
 
 // Функція збереження повідомлення
-export async function saveMessage(db, userId, chatId, sender, text, mediaUrl = null) {
-	if (mediaUrl) {
-		await db
-			.prepare('INSERT INTO messages (user_id, chat_id, sender, text, media_url) VALUES (?, ?, ?, ?, ?)')
-			.bind(userId, chatId, sender, text, mediaUrl)
-			.run();
-	} else {
-		await db.prepare('INSERT INTO messages (user_id, chat_id, sender, text) VALUES (?, ?, ?, ?)').bind(userId, chatId, sender, text).run();
-	}
+export async function saveMessage(db, userId, userName, chatId, sender, text, mediaUrl = null) {
+	const tableName = chatId < 0 ? 'group_messages' : 'messages';
+	await db
+		.prepare(`INSERT INTO ${tableName} (user_id, user_name, chat_id, sender, text, media_url) VALUES (?, ?, ?, ?, ?, ?)`)
+		.bind(userId, userName, chatId, sender, text, mediaUrl)
+		.run();
 }

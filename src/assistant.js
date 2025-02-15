@@ -63,7 +63,7 @@ export async function handleDefaultText(db, TELEGRAM_API_URL, message) {
 		const botReply = data.choices[0]?.message?.content || 'Не вдалося отримати відповідь.';
 
 		await sendMessage(TELEGRAM_API_URL, message.chat.id, botReply);
-		await saveMessage(db, message.from.id, message.chat.id, 'bot', botReply);
+		await saveMessage(db, 0, 'Fluxie', message.chat.id, 'bot', botReply);
 	} catch (error) {
 		console.error('Помилка при генерації тексту:', error);
 	}
@@ -89,7 +89,7 @@ export async function handleImageCommand(env, TELEGRAM_API_URL, message) {
 			console.error(`Помилка при генерації зображення: ${response.status} ${response.statusText}\nДеталі: ${errorText}`);
 			const reply = `Помилка при генерації зображення: ${response.status} ${response.statusText}`;
 			await sendMessage(TELEGRAM_API_URL, message.chat.id, reply, { parse_mode: 'Markdown' });
-			await saveMessage(env.DB, message.from.id, message.chat.id, 'bot', reply);
+			await saveMessage(env.DB, 0, 'Fluxie', message.chat.id, 'bot', reply);
 			return;
 		}
 
@@ -109,13 +109,13 @@ export async function handleImageCommand(env, TELEGRAM_API_URL, message) {
 			console.error(`Помилка при відправці зображення: ${sendPhotoResponse.status} ${sendPhotoResponse.statusText}\nДеталі: ${errorText}`);
 			const reply = `Помилка при відправці зображення: ${sendPhotoResponse.status} ${sendPhotoResponse.statusText}`;
 			await sendMessage(TELEGRAM_API_URL, message.chat.id, reply);
-			await saveMessage(env.DB, message.from.id, message.chat.id, 'bot', reply);
+			await saveMessage(env.DB, 0, 'Fluxie', message.chat.id, 'bot', reply);
 			return;
 		}
 
 		const sendPhotoData = await sendPhotoResponse.json();
 		if (sendPhotoData.ok) {
-			await saveMessage(env.DB, message.from.id, message.chat.id, 'bot', caption, imageUrl);
+			await saveMessage(env.DB, 0, 'Fluxie', message.chat.id, 'bot', caption, imageUrl);
 		} else {
 			console.error(`Помилка при збереженні повідомлення: ${JSON.stringify(sendPhotoData)}`);
 		}
@@ -123,14 +123,15 @@ export async function handleImageCommand(env, TELEGRAM_API_URL, message) {
 		console.error('Помилка при генерації зображення:', error);
 		const reply = `Помилка при генерації зображення: ${error.message}`;
 		await sendMessage(TELEGRAM_API_URL, message.chat.id, reply);
-		await saveMessage(env.DB, message.from.id, message.chat.id, 'bot', reply);
+		await saveMessage(env.DB, 0, 'Fluxie', message.chat.id, 'bot', reply);
 	}
 }
 
 // Функція видалення історії чату
 export async function deleteChatHistory(db, chatId) {
+	const tableName = chatId < 0 ? 'group_messages' : 'messages';
 	try {
-		await db.prepare('DELETE FROM messages WHERE chat_id = ?').bind(chatId).run();
+		await db.prepare(`DELETE FROM ${tableName} WHERE chat_id = ?`).bind(chatId).run();
 		return { success: true, message: '🧹 Історію чату успішно видалено.' };
 	} catch (error) {
 		console.error('Помилка при видаленні історії чату:', error);
@@ -172,7 +173,7 @@ export async function handlePhotoCommand(env, TELEGRAM_API_URL, message) {
 		const description = data.choices[0]?.message?.content || '🤷‍♀️ Не вдалося розпізнати зображення.';
 
 		await sendMessage(TELEGRAM_API_URL, message.chat.id, description);
-		await saveMessage(env.DB, message.from.id, message.chat.id, 'bot', description, fileUrl);
+		await saveMessage(env.DB, 0, 'Fluxie', message.chat.id, 'bot', description, fileUrl);
 	} catch (error) {
 		console.error('Помилка при розпізнаванні зображення:', error);
 	}
@@ -180,25 +181,21 @@ export async function handlePhotoCommand(env, TELEGRAM_API_URL, message) {
 
 // Функція фільтрування історії
 export async function getFilteredHistory(db, chatId) {
+	const tableName = chatId < 0 ? 'group_messages' : 'messages';
 	const result = await db
-		.prepare('SELECT sender, text, media_url FROM messages WHERE chat_id = ? ORDER BY id DESC LIMIT 50')
+		.prepare(`SELECT user_id, user_name, sender, text, media_url FROM ${tableName} WHERE chat_id = ? ORDER BY id DESC LIMIT 50`)
 		.bind(chatId)
 		.all();
 
 	if (result && result.results) {
 		return result.results.reverse().map((msg) => {
-			if (msg.media_url) {
-				return {
-					role: msg.sender === 'user' ? 'user' : 'assistant',
-					content: msg.text,
-					media_url: msg.media_url,
-				};
-			} else {
-				return {
-					role: msg.sender === 'user' ? 'user' : 'assistant',
-					content: msg.text,
-				};
-			}
+			return {
+				role: msg.sender === 'user' ? 'user' : 'assistant',
+				user_id: msg.user_id,
+				user_name: msg.user_name,
+				content: msg.text,
+				...(msg.media_url ? { media_url: msg.media_url } : {}),
+			};
 		});
 	}
 	return [];
